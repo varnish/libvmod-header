@@ -30,6 +30,7 @@
 
 #include "vrt.h"
 #include "bin/varnishd/cache.h"
+#include "include/vct.h"
 
 #include "vcc_if.h"
 
@@ -79,19 +80,16 @@ vmod_append(struct sess *sp, enum gethdr_e e, const char *h, const char *fmt, ..
 	va_list ap;
 	struct http *hp;
 	char *b;
-
 	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
 	assert(fmt != NULL);
 	
 	hp = vrt_selecthttp(sp, e);
-
 	va_start(ap, fmt);
 	b = VRT_String(hp->ws, h + 1, fmt, ap);
-	if (b == NULL) {
+	if (b == NULL)
 		WSP(sp, SLT_LostHeader, "vmod_header: %s", h+1);
-	} else {
+	else
 		http_SetHeader(sp->wrk,sp->fd,hp,b);
-	}
 	va_end(ap);
 }
 
@@ -105,12 +103,51 @@ vmod_remove(struct sess *sp, enum gethdr_e e, const char *h, const char *s)
 	return (1);
 }
 
-void __match_proto__()
-vmod_get(struct sess *sp, enum gethdr_e e, const char *h, const char *s)
-{
-	(void)e;
-	(void)sp;
-	(void)h;
-	return (1);
-}
 */
+
+static unsigned
+http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re)
+{
+        unsigned u;
+
+        for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
+                Tcheck(hp->hd[u]);
+                if (hp->hd[u].e < hp->hd[u].b + l + 1) 
+                        continue;
+                if (hp->hd[u].b[l] != ':') 
+                        continue;
+                if (strncasecmp(hdr, hp->hd[u].b, l))
+                        continue;
+		if (!VRT_re_match(hp->hd[u].b + l + 1,re))
+			continue;
+                return (u);
+        }
+        return (0);
+}
+
+/*
+ * XXX: Needs to be cleaned up a bit
+ */
+const char * __match_proto__()
+vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h, const char *s)
+{
+	struct http *hp;
+	unsigned u;
+	char *p;
+
+	if (priv->priv == NULL) {
+		VRT_re_init(&priv->priv,s);
+		priv->free = VRT_re_fini;
+	}
+	
+	hp = vrt_selecthttp(sp, e);
+	u = http_findhdr(hp,h[0] - 1,h+1,priv->priv);
+	if (u == 0) {
+		return NULL;
+	}
+	p = hp->hd[u].b + h[0];
+	while (vct_issp(*p))
+		p++;
+	return p;
+}
+
