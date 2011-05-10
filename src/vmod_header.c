@@ -39,13 +39,60 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 	return (0);
 }
 
-void __match_proto__()
-vmod_append(struct sess *sp, enum gethdr_e e, const char *h, const char *s)
+/*
+ * Stolen bluntly from cache_vrt.c (should be fixed)
+ */
+static struct http *
+vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
 {
-	(void)e;
-	(void)sp;
-	(void)h;
-	return (1);
+        struct http *hp;
+
+        CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
+        switch (where) {
+        case HDR_REQ:
+                hp = sp->http;
+                break;
+        case HDR_BEREQ:
+                hp = sp->wrk->bereq;
+                break;
+        case HDR_BERESP:
+                hp = sp->wrk->beresp;
+                break;
+        case HDR_RESP:
+                hp = sp->wrk->resp;
+                break;
+        case HDR_OBJ:
+                CHECK_OBJ_NOTNULL(sp->obj, OBJECT_MAGIC);
+                hp = sp->obj->http;
+                break;
+        default:
+                assert("ops");
+        }
+        CHECK_OBJ_NOTNULL(hp, HTTP_MAGIC);
+        return (hp);
+}
+
+
+void __match_proto__()
+vmod_append(struct sess *sp, enum gethdr_e e, const char *h, const char *fmt, ...)
+{
+	va_list ap;
+	struct http *hp;
+	char *b;
+
+	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
+	assert(fmt != NULL);
+	
+	hp = vrt_selecthttp(sp, e);
+
+	va_start(ap, fmt);
+	b = VRT_String(hp->ws, h + 1, fmt, ap);
+	if (b == NULL) {
+		WSP(sp, SLT_LostHeader, "vmod_header: %s", h+1);
+	} else {
+		http_SetHeader(sp->wrk,sp->fd,hp,b);
+	}
+	va_end(ap);
 }
 
 /*

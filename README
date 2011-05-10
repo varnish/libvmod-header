@@ -1,4 +1,4 @@
-This is an example skeleton for developing out-of-tree Varnish vmods.
+This is a header-fidgeting vmod
 
 Usage:
 ./configure VARNISHSRC=DIR [VMODDIR=DIR]
@@ -10,5 +10,10 @@ will be added to the include search paths for your module.
 Optionally you can also set the vmod install dir by adding VMODDIR=DIR
 (defaults to the pkg-config discovered directory from your Varnish
 installation).
+
+TODO
+====
+
+- Why is vrt_selecthttp static in cache_vrt.c?
 
 
