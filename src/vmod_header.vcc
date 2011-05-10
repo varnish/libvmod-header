@@ -1,8 +1,7 @@
 Module header
 Init init_function
-Function INT abs(INT)
-Function VOID remove(HEADER,STRING)
+#Function VOID remove(HEADER,STRING)
 Function VOID append(HEADER,STRING)
-Function STRING get(HEADER,STRING)
-Function VOID regsub(HEADER,STRING,STRING)
-Function VOID copy(HEADER,HEADER)
+#Function STRING get(HEADER,STRING)
+#Function VOID regsub(HEADER,STRING,STRING)
+#Function VOID copy(HEADER,HEADER)
