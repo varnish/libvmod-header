@@ -42,6 +42,15 @@ Appending
 To append an additional header identical to a previous header, use
 header.append(<the header>, <content>);
 
+Retrieving
+----------
+
+You can fetch the value of the first matching header using get(). Example::
+
+        sub vcl_fetch {
+                set beresp.http.x-test = header.get(beresp.http.Set-Cookie,"user=");
+        }
+
 Acknowledgements
 ================
 
