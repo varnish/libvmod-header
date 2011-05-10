@@ -36,20 +36,69 @@ Example VCL::
 		header.append(beresp.http.Set-Cookie,"foo=bar");
 	}
 
-Appending
----------
 
-To append an additional header identical to a previous header, use
-header.append(<the header>, <content>);
+append
+------
 
-Retrieving
-----------
+Prototype
+        header.append(<header>, <content>)
+Returns
+        void
+Description
+        Append lets you add an extra occurrence of an existing header.
+Example
+        ``header.append(beresp.http.Set-Cookie,"foo=bar")``
 
-You can fetch the value of the first matching header using get(). Example::
+get
+---
 
-        sub vcl_fetch {
-                set beresp.http.x-test = header.get(beresp.http.Set-Cookie,"user=");
-        }
+Prototype
+        header.get(<header>, <regular expression>)
+Returns
+        String
+Description
+        Get fetches the value of the first `header` that matches the given
+        regular expression.
+Example
+        ``set beresp.http.xusr = header.get(beresp.http.set-cookie,"user=");``
+
+regsub
+------
+
+.. warning::
+
+   Not implemented yet.
+
+Prototype
+        header.regsub(<header>, <regular expression>, <substitution>)
+Returns
+        void
+Description
+        regsub executes a regular expression substitution on all occurrences of <header>.
+        Works similar to regular regsub(), except that it changes the
+        values in-place and works on all occurrences of the named header,
+        not just the first.
+Example 1
+        ``header.regsub(beresp.http.set-cookie,".*silly.*","")``
+Example 2
+        ``header.regsub(beresp.http.set-cookie,"s=apple","s=orange");``
+
+copy
+----
+
+.. warning::
+
+   Not implemented yet.
+
+Prototype
+        header.copy(<source header>, <destination header>)
+Returns
+        void
+Description
+        Copies all of the source headers to a new header.
+Example
+        ``header.copy(beresp.http.set-cookie, beresp.http.x-old-cookie);``
+
 
 Acknowledgements
 ================
@@ -61,10 +110,8 @@ part of Varnish Cache 3.0 and beyond.
 TODO
 ====
 
-- Removing headers
 - Copying headers
 - Altering headers
 - Why is vrt_selecthttp static in cache_vrt.c?
-  Should at least be re-named locally.
-
-
+  Should at least be re-named locally. Ditto for a few other functions.
+- Varnishtest
