@@ -42,6 +42,13 @@ Appending
 To append an additional header identical to a previous header, use
 header.append(<the header>, <content>);
 
+Acknowledgements
+================
+
+Author: Kristian Lyngstøl <kristian@bohemians.org>, Varnish Software AS
+Skeleton by Martin Blix Grydeland <martin@varnish-software.com>, vmods are
+part of Varnish Cache 3.0 and beyond.
+
 TODO
 ====
 
