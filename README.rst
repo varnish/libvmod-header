@@ -1,5 +1,8 @@
+===========
 vmod_header
 ===========
+
+:Manual section: 7
 
 Varnish Module (vmod) for manipulation of duplicated headers (for instance
 multiple set-cookie headers).
@@ -10,10 +13,10 @@ Installation
 Installation requires the Varnish source tree (only the source matching the
 binary installation).
 
-1. ./autogen.sh  (for git-installation)
-2. ./configure VARNISHSRC=/path/to/your/varnish/source/varnish-cache
-3. make
-4. make install (may require root: sudo make install)
+1. `./autogen.sh`  (for git-installation)
+2. `./configure VARNISHSRC=/path/to/your/varnish/source/varnish-cache`
+3. `make`
+4. `make install` (may require root: sudo make install)
 
 VARNISHSRCDIR is the directory of the Varnish source tree for which to
 compile your vmod. Both the VARNISHSRCDIR and VARNISHSRCDIR/include
