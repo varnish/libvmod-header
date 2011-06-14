@@ -1,0 +1,60 @@
+
+varnishtest "Header-vmod: Test removing"
+
+server s1 {
+	timeout 10
+	rxreq
+	expect req.url == "/foo"
+	txresp -status 200 -hdr "foo: notok=1" -hdr "foo: ok2k" -hdr "foo: notok=2"
+	rxreq
+	expect req.url == "/bar"
+	txresp -status 200 -hdr "foo: notok=1" -hdr "foo: ok2k" -hdr "foo: notok=2"
+	rxreq
+	expect req.url == "/nothing"
+	txresp -status 200 -hdr "foo: notok=1" -hdr "foo: ok2k" -hdr "foo: notok=2"
+} -start
+
+varnish v1 -vcl+backend {
+	import header;
+
+	sub vcl_fetch {
+		if (req.url == "/foo") {
+			header.remove(beresp.http.foo,"notok");
+		}
+		if (req.url == "/nothing") {
+			header.remove(beresp.http.foo,".");
+		}
+		if (beresp.http.foo) {
+			set beresp.http.foo-exists = "yes";
+		} else {
+			set beresp.http.foo-exists = "no";
+		}
+
+		return(deliver);
+	}
+} -start
+
+# Remove one, "notok". Assumes ok2k (second in line) is tested next
+client c1 {
+	txreq -url "/foo"
+	rxresp
+	expect resp.status == 200
+	expect resp.http.foo == "ok2k"
+} -run
+
+# Remove nothing
+client c2 {
+	txreq -url "/bar"
+	rxresp
+	expect resp.status == 200
+	expect resp.http.foo == "notok=1"
+} -run
+
+# Remove everything (confusing names, huh?)
+client c3 {
+	txreq -url "/nothing"
+	rxresp
+	expect resp.status == 200
+	expect resp.http.foo-exists == "no"
+} -run
+

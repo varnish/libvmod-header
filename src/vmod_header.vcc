@@ -1,6 +1,7 @@
 Module header
 Init init_function
 Function VOID append(HEADER,STRING_LIST)
-Function STRING get(PRIV_VCL,HEADER,STRING)
+Function VOID remove(PRIV_CALL,HEADER,STRING)
+Function STRING get(PRIV_CALL,HEADER,STRING)
 #Function VOID regsub(HEADER,STRING,STRING)
 #Function VOID copy(HEADER,HEADER)

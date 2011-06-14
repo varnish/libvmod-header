@@ -34,6 +34,7 @@ Example VCL::
 
 	sub vcl_fetch {
 		header.append(beresp.http.Set-Cookie,"foo=bar");
+                header.remove(beresp.http.Set-Cookie,"dontneedthiscookie");
 	}
 
 
@@ -62,26 +63,18 @@ Description
 Example
         ``set beresp.http.xusr = header.get(beresp.http.set-cookie,"user=");``
 
-regsub
+remove
 ------
 
-.. warning::
-
-   Not implemented yet.
-
 Prototype
-        header.regsub(<header>, <regular expression>, <substitution>)
+        header.remove(<header>, <regular expression>)
 Returns
         void
 Description
-        regsub executes a regular expression substitution on all occurrences of <header>.
-        Works similar to regular regsub(), except that it changes the
-        values in-place and works on all occurrences of the named header,
-        not just the first.
-Example 1
-        ``header.regsub(beresp.http.set-cookie,".*silly.*","")``
-Example 2
-        ``header.regsub(beresp.http.set-cookie,"s=apple","s=orange");``
+        remove() removes all occurences of `header` that matches the given
+        regular expression.
+Example
+        ``header.remove(beresp.http.set-cookie,".*silly.*")``
 
 copy
 ----
@@ -113,7 +106,8 @@ part of Varnish Cache 3.0 and beyond.
 TODO
 ====
 
+- Pull in example-vmod's mechanisms for make check
 - Copying headers
-- Altering headers
 - Why is vrt_selecthttp static in cache_vrt.c?
   Should at least be re-named locally. Ditto for a few other functions.
+- Some general-purpose clean-up
