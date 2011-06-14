@@ -103,6 +103,9 @@ Example
 Acknowledgements
 ================
 
+The development of this plugin was made possible by the sponsorship of 
+Softonic, http://en.softonic.com/ .
+
 Author: Kristian Lyngstøl <kristian@bohemians.org>, Varnish Software AS
 Skeleton by Martin Blix Grydeland <martin@varnish-software.com>, vmods are
 part of Varnish Cache 3.0 and beyond.
@@ -114,4 +117,3 @@ TODO
 - Altering headers
 - Why is vrt_selecthttp static in cache_vrt.c?
   Should at least be re-named locally. Ditto for a few other functions.
-- Varnishtest
