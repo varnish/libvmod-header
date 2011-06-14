@@ -3,7 +3,7 @@ INCLUDES = -I$(VARNISHSRC)/include -I$(VARNISHSRC)
 vmoddir = $(VMODDIR)
 vmod_LTLIBRARIES = libvmod_header.la
 
-libvmod_header_la_LDFLAGS = -avoid-version
+libvmod_header_la_LDFLAGS = -module -export-dynamic -avoid-version
 
 libvmod_header_la_SOURCES = \
 	vcc_if.c \
