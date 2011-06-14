@@ -2,32 +2,35 @@
 vmod_header
 ===========
 
-:Manual section: 7
+---------------------
+Varnish Header Module
+---------------------
+
+:Manual section: 3
+:Author: Kristian Lyngstøl
+:Date: 2011-06-14
+:Version: 0.1
+
+SYNOPSIS
+========
+
+::
+
+        import header;
+
+        header.append(<header>, <content>)
+        header.get(<header>, <regular expression>)
+        header.remove(<header>, <regular expression>)
+        header.copy(<source header>, <destination header>)
+
+DESCRIPTION
+===========
 
 Varnish Module (vmod) for manipulation of duplicated headers (for instance
 multiple set-cookie headers).
 
-Installation
-============
-
-Installation requires the Varnish source tree (only the source matching the
-binary installation).
-
-1. `./autogen.sh`  (for git-installation)
-2. `./configure VARNISHSRC=/path/to/your/varnish/source/varnish-cache`
-3. `make`
-4. `make install` (may require root: sudo make install)
-
-VARNISHSRCDIR is the directory of the Varnish source tree for which to
-compile your vmod. Both the VARNISHSRCDIR and VARNISHSRCDIR/include
-will be added to the include search paths for your module.
-
-Optionally you can also set the vmod install dir by adding VMODDIR=DIR
-(defaults to the pkg-config discovered directory from your Varnish
-installation).
-
-Usage
-=====
+FUNCTIONS
+=========
 
 Example VCL::
 
@@ -95,8 +98,27 @@ Description
 Example
         ``header.copy(beresp.http.set-cookie, beresp.http.x-old-cookie);``
 
+INSTALLATION
+============
 
-Acknowledgements
+Installation requires the Varnish source tree (only the source matching the
+binary installation).
+
+1. `./autogen.sh`  (for git-installation)
+2. `./configure VARNISHSRC=/path/to/your/varnish/source/varnish-cache`
+3. `make`
+4. `make install` (may require root: sudo make install)
+
+VARNISHSRCDIR is the directory of the Varnish source tree for which to
+compile your vmod. Both the VARNISHSRCDIR and VARNISHSRCDIR/include
+will be added to the include search paths for your module.
+
+Optionally you can also set the vmod install dir by adding VMODDIR=DIR
+(defaults to the pkg-config discovered directory from your Varnish
+installation).
+
+
+ACKNOWLEDGEMENTS
 ================
 
 The development of this plugin was made possible by the sponsorship of 
@@ -106,11 +128,22 @@ Author: Kristian Lyngstøl <kristian@bohemians.org>, Varnish Software AS
 Skeleton by Martin Blix Grydeland <martin@varnish-software.com>, vmods are
 part of Varnish Cache 3.0 and beyond.
 
-TODO
+BUGS
 ====
 
-- Pull in example-vmod's mechanisms for make check
-- Copying headers
-- Why is vrt_selecthttp static in cache_vrt.c?
-  Should at least be re-named locally. Ditto for a few other functions.
-- Some general-purpose clean-up
+You can't use dynamic regular expressions, which also holds true for normal
+regular expressions in regsub(), but VCL isn't able to warn you about this
+when it comes to vmods yet.
+
+Header-copying is not yet implemented.
+
+Some overlap with varnishd exists, this will be mended as Varnish 3.0
+evolves.
+
+COPYRIGHT
+=========
+
+This document is licensed under the same license as the
+libvmod-header project. See LICENSE for details.
+
+* Copyright (c) 2011 Varnish Software
