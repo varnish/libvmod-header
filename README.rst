@@ -141,6 +141,13 @@ Header-copying is not yet implemented.
 Some overlap with varnishd exists, this will be mended as Varnish 3.0
 evolves.
 
+SEE ALSO
+========
+
+* varnishd(1)
+* vcl(7)
+* https://github.com/KristianLyng/libvmod-header
+
 COPYRIGHT
 =========
 
