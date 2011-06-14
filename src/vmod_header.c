@@ -27,6 +27,7 @@
  */
 
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "vrt.h"
 #include "bin/varnishd/cache.h"
@@ -34,9 +35,14 @@
 
 #include "vcc_if.h"
 
+pthread_mutex_t header_mutex;
+
 int
 init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
 {
+	int ret;
+	ret = pthread_mutex_init(&header_mutex, NULL);
+	assert (ret == 0);
 	return (0);
 }
 
@@ -134,10 +140,19 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 	struct http *hp;
 	unsigned u;
 	char *p;
+	int ret;
 
 	if (priv->priv == NULL) {
-		VRT_re_init(&priv->priv,s);
-		priv->free = VRT_re_fini;
+		ret = pthread_mutex_lock(&header_mutex);
+		assert (ret == 0);
+		/*
+		 * Need to re-test to avoid race
+		 */
+		if (priv->priv == NULL) {
+			VRT_re_init(&priv->priv,s);
+			priv->free = VRT_re_fini;
+		}
+		pthread_mutex_unlock(&header_mutex);
 	}
 	
 	hp = header_vrt_selecthttp(sp, e);
