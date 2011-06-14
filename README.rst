@@ -108,6 +108,7 @@ binary installation).
 2. `./configure VARNISHSRC=/path/to/your/varnish/source/varnish-cache`
 3. `make`
 4. `make install` (may require root: sudo make install)
+5. `make check` (Optional for regression tests)
 
 VARNISHSRCDIR is the directory of the Varnish source tree for which to
 compile your vmod. Both the VARNISHSRCDIR and VARNISHSRCDIR/include
