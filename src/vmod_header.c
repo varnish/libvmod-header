@@ -44,7 +44,7 @@ init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
  * Stolen bluntly from cache_vrt.c (should be fixed)
  */
 static struct http *
-vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
+header_vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
 {
         struct http *hp;
 
@@ -83,7 +83,7 @@ vmod_append(struct sess *sp, enum gethdr_e e, const char *h, const char *fmt, ..
 	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
 	assert(fmt != NULL);
 	
-	hp = vrt_selecthttp(sp, e);
+	hp = header_vrt_selecthttp(sp, e);
 	va_start(ap, fmt);
 	b = VRT_String(hp->ws, h + 1, fmt, ap);
 	if (b == NULL)
@@ -106,7 +106,7 @@ vmod_remove(struct sess *sp, enum gethdr_e e, const char *h, const char *s)
 */
 
 static unsigned
-http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re)
+header_http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re)
 {
         unsigned u;
 
@@ -140,8 +140,8 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 		priv->free = VRT_re_fini;
 	}
 	
-	hp = vrt_selecthttp(sp, e);
-	u = http_findhdr(hp,h[0] - 1,h+1,priv->priv);
+	hp = header_vrt_selecthttp(sp, e);
+	u = header_http_findhdr(hp,h[0] - 1,h+1,priv->priv);
 	if (u == 0) {
 		return NULL;
 	}
