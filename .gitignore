@@ -1,6 +1,5 @@
 Makefile
 Makefile.in
-README.pdf
 aclocal.m4
 autom4te.cache/
 config.guess
