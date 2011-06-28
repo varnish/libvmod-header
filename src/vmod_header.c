@@ -39,6 +39,8 @@ pthread_mutex_t header_mutex;
 
 /*
  * Stolen bluntly from cache_vrt.c (should be fixed)
+ *
+ * Returns the right struct http * to use for a given type of header.
  */
 static struct http *
 header_vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
@@ -70,6 +72,11 @@ header_vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
         return (hp);
 }
 
+/*
+ * Returns the header named as *hdr that also matches the regular
+ * expression *re. Blatant copy of http_findhdr() in varnishd, with the
+ * re-stuff added.
+ */
 static unsigned
 header_http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re)
 {
@@ -90,6 +97,10 @@ header_http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re
         return (0);
 }
 
+/*
+ * Same as http_Unset(), pluss regex: It removes the header *hdr, assuming
+ * it matches the regular expression *re.
+ */
 static void
 header_http_Unset(struct http *hp, unsigned l, const char *hdr, void *re)
 {
