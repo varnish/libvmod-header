@@ -3,5 +3,4 @@ Init init_function
 Function VOID append(HEADER,STRING_LIST)
 Function VOID remove(PRIV_CALL,HEADER,STRING)
 Function STRING get(PRIV_CALL,HEADER,STRING)
-#Function VOID regsub(HEADER,STRING,STRING)
-#Function VOID copy(HEADER,HEADER)
+Function VOID copy(HEADER,HEADER)

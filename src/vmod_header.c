@@ -191,6 +191,47 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 }
 
 /*
+ * Returns the header named as *hdr that also matches the regular
+ * expression *re. Blatant copy of http_findhdr() in varnishd, with the
+ * re-stuff added.
+ */
+static unsigned
+header_http_cphdr(struct sess *sp, const struct http *hp, unsigned l, const char *hdr, enum gethdr_e dst_e, const char *dst_h)
+{
+        unsigned u;
+	char *p;
+        for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
+                Tcheck(hp->hd[u]);
+                if (hp->hd[u].e < hp->hd[u].b + l + 1) 
+                        continue;
+                if (hp->hd[u].b[l] != ':') 
+                        continue;
+                if (strncasecmp(hdr, hp->hd[u].b, l))
+                        continue;
+		p = hp->hd[u].b + l+1;
+		while (vct_issp(*p))
+			p++;
+                vmod_append(sp, dst_e, dst_h, p,vrt_magic_string_end);
+        }
+        return (0);
+}
+
+/*
+ * XXX: Needs to be cleaned up a bit
+ */
+void __match_proto__()
+vmod_copy(struct sess *sp, enum gethdr_e src_e, const char *src_h, enum gethdr_e dst_e, const char *dst_h)
+{
+	struct http *src_hp;
+	unsigned u;
+	char *p;
+	int ret;
+
+	src_hp = header_vrt_selecthttp(sp, src_e);
+	u = header_http_cphdr(sp,src_hp,src_h[0] - 1,src_h+1,dst_e,dst_h);
+}
+
+/*
  * XXX: Needs to be cleaned up a bit
  */
 void __match_proto__()

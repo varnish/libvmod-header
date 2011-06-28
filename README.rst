@@ -85,10 +85,6 @@ Example
 copy
 ----
 
-.. warning::
-
-   Not implemented yet.
-
 Prototype
         header.copy(<source header>, <destination header>)
 Returns
