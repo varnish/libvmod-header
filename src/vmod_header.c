@@ -97,6 +97,19 @@ header_http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re
         return (0);
 }
 
+static int
+header_http_IsHdr(const txt *hh, const char *hdr)
+{
+	unsigned l;
+
+	Tcheck(*hh);
+	AN(hdr);
+	l = hdr[0];
+	assert(l == strlen(hdr + 1));
+	assert(hdr[l] == ':');
+	hdr++;
+	return (!strncasecmp(hdr, hh->b, l));
+}
 /*
  * Same as http_Unset(), pluss regex: It removes the header *hdr, assuming
  * it matches the regular expression *re.
@@ -109,13 +122,8 @@ header_http_Unset(struct http *hp, unsigned l, const char *hdr, void *re)
 	for (v = u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
 		if (hp->hd[u].b == NULL)
 			continue;
-                if (hp->hd[u].e < hp->hd[u].b + l + 1)
-                        continue;
-                if (hp->hd[u].b[l] != ':')
-                        continue;
-                if (strncasecmp(hdr, hp->hd[u].b, l))
-                        continue;
-		if (VRT_re_match(hp->hd[u].b + l + 1,re))
+		if (header_http_IsHdr(&hp->hd[u], hdr) &&
+			VRT_re_match(hp->hd[u].b + l,re))
 			continue;
 		if (v != u) {
 			memcpy(&hp->hd[v], &hp->hd[u], sizeof *hp->hd);
@@ -256,6 +264,6 @@ vmod_remove(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char
 	}
 	
 	hp = header_vrt_selecthttp(sp, e);
-	header_http_Unset(hp,h[0] - 1,h+1,priv->priv);
+	header_http_Unset(hp,h[0],h,priv->priv);
 }
 

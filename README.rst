@@ -125,14 +125,14 @@ Author: Kristian Lyngstøl <kristian@bohemians.org>, Varnish Software AS
 Skeleton by Martin Blix Grydeland <martin@varnish-software.com>, vmods are
 part of Varnish Cache 3.0 and beyond.
 
+First bug report: Imo Klabun, thanks!
+
 BUGS
 ====
 
 You can't use dynamic regular expressions, which also holds true for normal
 regular expressions in regsub(), but VCL isn't able to warn you about this
 when it comes to vmods yet.
-
-Header-copying is not yet implemented.
 
 Some overlap with varnishd exists, this will be mended as Varnish 3.0
 evolves.
