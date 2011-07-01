@@ -31,3 +31,4 @@ src/vcc_if.o
 src/vmod_header.lo
 src/vmod_header.o
 stamp-h1
+vmod_header.3
