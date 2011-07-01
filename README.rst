@@ -8,8 +8,8 @@ Varnish Header Module
 
 :Manual section: 3
 :Author: Kristian Lyngstøl
-:Date: 2011-06-14
-:Version: 0.1
+:Date: 2011-07-1
+:Version: 0.2
 
 SYNOPSIS
 ========
