@@ -79,9 +79,9 @@ Returns
         void
 Description
         remove() removes all occurences of `header` that matches the given
-        regular expression.
+        regular expression. The example is a white-list of "funcookie=".
 Example
-        ``header.remove(beresp.http.set-cookie,".*silly.*")``
+        ``header.remove(beresp.http.set-cookie,"^(?!(funcookie=))");``
 
 copy
 ----

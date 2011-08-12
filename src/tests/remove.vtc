@@ -18,6 +18,9 @@ server s1 {
 	rxreq
 	expect req.url == "/blatti2"
 	txresp -status 200 -hdr "foo: notok=1" -hdr "foo: ok2k" -hdr "foo:notok=3" -hdr "foo: notok=2"
+	rxreq
+	expect req.url == "/blatti3"
+	txresp -status 200 -hdr "set-cookie: analytics=1" -hdr "set-cookie: funcookie=ok2k" -hdr "set-cookie: uglycookie=3" -hdr "set-cookie: notok=2"
 	
 } -start
 
@@ -36,6 +39,9 @@ varnish v1 -vcl+backend {
 		}
 		if (req.url == "/blatti2") {
 			header.remove(beresp.http.foo,"^no.ok=.$");
+		}
+		if (req.url == "/blatti3") {
+			header.remove(beresp.http.set-cookie,"^(?!(funcookie=))");
 		}
 		if (beresp.http.foo) {
 			set beresp.http.foo-exists = "yes";
@@ -79,5 +85,12 @@ client c1 {
 	expect resp.status == 200
 	expect resp.http.foo-exists == "yes"
 	expect resp.http.foo == "ok2k"
+	
+	# Remove everything except fun-cookie
+	txreq -url "/blatti3"
+	rxresp
+	expect resp.status == 200
+	expect resp.http.foo-exists == "no"
+	expect resp.http.set-cookie == "funcookie=ok2k"
 } -run
 
