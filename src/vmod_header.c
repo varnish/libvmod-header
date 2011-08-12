@@ -72,31 +72,6 @@ header_vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
         return (hp);
 }
 
-/*
- * Returns the header named as *hdr that also matches the regular
- * expression *re. Blatant copy of http_findhdr() in varnishd, with the
- * re-stuff added.
- */
-static unsigned
-header_http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re)
-{
-        unsigned u;
-
-        for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-                Tcheck(hp->hd[u]);
-                if (hp->hd[u].e < hp->hd[u].b + l + 1) 
-                        continue;
-                if (hp->hd[u].b[l] != ':') 
-                        continue;
-                if (strncasecmp(hdr, hp->hd[u].b, l))
-                        continue;
-		if (!VRT_re_match(hp->hd[u].b + l + 1,re))
-			continue;
-                return (u);
-        }
-        return (0);
-}
-
 static int
 header_http_IsHdr(const txt *hh, const char *hdr)
 {
@@ -131,6 +106,26 @@ header_http_match(const struct http *hp, unsigned u, unsigned l, void *re, const
 	if (VRT_re_match(start,re))
 		return 1;
 	return 0;
+}
+
+/*
+ * Returns the header named as *hdr that also matches the regular
+ * expression *re. Blatant copy of http_findhdr() in varnishd, with the
+ * re-stuff added.
+ */
+static unsigned
+header_http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re)
+{
+        unsigned u;
+
+        for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
+                Tcheck(hp->hd[u]);
+		if (hp->hd[u].b == NULL)
+			continue;
+		if (header_http_match(hp, u, l, re, hdr))
+			return (u);
+        }
+        return (0);
 }
 
 /*
@@ -210,7 +205,7 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 	}
 	
 	hp = header_vrt_selecthttp(sp, e);
-	u = header_http_findhdr(hp,h[0] - 1,h+1,priv->priv);
+	u = header_http_findhdr(hp,h[0],h,priv->priv);
 	if (u == 0) {
 		return NULL;
 	}
@@ -232,13 +227,13 @@ header_http_cphdr(struct sess *sp, const struct http *hp, unsigned l, const char
 	char *p;
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
                 Tcheck(hp->hd[u]);
-                if (hp->hd[u].e < hp->hd[u].b + l + 1) 
+                if (hp->hd[u].e < hp->hd[u].b + l) 
                         continue;
-                if (hp->hd[u].b[l] != ':') 
+                if (hp->hd[u].b[l-1] != ':') 
                         continue;
-                if (strncasecmp(hdr, hp->hd[u].b, l))
+                if (strncasecmp(hdr+1, hp->hd[u].b, l-1))
                         continue;
-		p = hp->hd[u].b + l+1;
+		p = hp->hd[u].b + l;
 		while (vct_issp(*p))
 			p++;
                 vmod_append(sp, dst_e, dst_h, p,vrt_magic_string_end);
@@ -258,7 +253,7 @@ vmod_copy(struct sess *sp, enum gethdr_e src_e, const char *src_h, enum gethdr_e
 	int ret;
 
 	src_hp = header_vrt_selecthttp(sp, src_e);
-	u = header_http_cphdr(sp,src_hp,src_h[0] - 1,src_h+1,dst_e,dst_h);
+	u = header_http_cphdr(sp,src_hp,src_h[0],src_h,dst_e,dst_h);
 }
 
 /*
