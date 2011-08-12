@@ -47,41 +47,33 @@ varnish v1 -vcl+backend {
 	}
 } -start
 
-# Remove one, "notok". Assumes ok2k (second in line) is tested next
 client c1 {
+	# Remove one, "notok". Assumes ok2k (second in line) is tested next
 	txreq -url "/foo"
 	rxresp
 	expect resp.status == 200
 	expect resp.http.foo == "ok2k"
-} -run
 
-# Remove nothing
-client c2 {
+	# Remove nothing
 	txreq -url "/bar"
 	rxresp
 	expect resp.status == 200
 	expect resp.http.foo == "notok=1"
-} -run
 
-# Remove everything (confusing names, huh?)
-client c3 {
+	# Remove everything (confusing names, huh?)
 	txreq -url "/nothing"
 	rxresp
 	expect resp.status == 200
 	expect resp.http.foo-exists == "no"
-} -run
 
-# Remove with regex - fail due to whitespace
-client c4 {
+	# Remove with regex - fail due to whitespace in the regex
 	txreq -url "/blatti1"
 	rxresp
 	expect resp.status == 200
 	expect resp.http.foo-exists == "yes"
 	expect resp.http.foo == "notok=1"
-} -run
 
-# Remove with regex - work
-client c4 {
+	# Remove with regex - work (remove leading whitespace)
 	txreq -url "/blatti2"
 	rxresp
 	expect resp.status == 200
