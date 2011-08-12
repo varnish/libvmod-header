@@ -34,6 +34,7 @@
 #include "include/vct.h"
 
 #include "vcc_if.h"
+#include "config.h"
 
 pthread_mutex_t header_mutex;
 
@@ -284,3 +285,8 @@ vmod_remove(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char
 	header_http_Unset(hp,h[0],h,priv->priv);
 }
 
+const char * __match_proto__()
+vmod_version(struct sess *sp)
+{
+	return VERSION;
+}

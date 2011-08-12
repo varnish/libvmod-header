@@ -8,8 +8,8 @@ Varnish Header Module
 
 :Manual section: 3
 :Author: Kristian Lyngstøl
-:Date: 2011-07-1
-:Version: 0.2
+:Date: 2011-08-12
+:Version: 0.3
 
 SYNOPSIS
 ========
@@ -22,6 +22,7 @@ SYNOPSIS
         header.get(<header>, <regular expression>)
         header.remove(<header>, <regular expression>)
         header.copy(<source header>, <destination header>)
+        header.version()
 
 DESCRIPTION
 ===========
@@ -94,6 +95,19 @@ Description
 Example
         ``header.copy(beresp.http.set-cookie, beresp.http.x-old-cookie);``
 
+version
+-------
+
+Prototype
+        header.version()
+Returns
+        string
+Description
+        Returns the string constant version-number of the header vmod.
+Example
+        ``set resp.http.X-header-version = header.version();``
+
+
 INSTALLATION
 ============
 
@@ -121,11 +135,11 @@ ACKNOWLEDGEMENTS
 The development of this plugin was made possible by the sponsorship of 
 Softonic, http://en.softonic.com/ .
 
-Author: Kristian Lyngstøl <kristian@bohemians.org>, Varnish Software AS
+Author: Kristian Lyngstøl <kristian@varnish-software.com>, Varnish Software AS
 Skeleton by Martin Blix Grydeland <martin@varnish-software.com>, vmods are
 part of Varnish Cache 3.0 and beyond.
 
-First bug report: Imo Klabun, thanks!
+Also thanks to: Imo Klabun and Anders Nordby for bug reports.
 
 BUGS
 ====
