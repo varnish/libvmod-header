@@ -88,24 +88,43 @@ header_http_IsHdr(const txt *hh, const char *hdr)
 }
 
 /*
- * Return true if the hp->hd[u] header matches *hdr and the regex *re.
+ * Return true if the hp->hd[u] header matches *hdr and the regex *re
+ * matches the content.
+ *
+ * If re is NULL, content is not tested and as long as it's the right
+ * header, a match is returned.
  */
 static int
-header_http_match(const struct http *hp, unsigned u, unsigned l, void *re, const char *hdr)
+header_http_match(const struct http *hp, unsigned u, void *re, const char *hdr)
 {
 	char *start;
+	unsigned l;
+	
 	assert(hdr);
-	assert(re);
 	assert(hp);
+	
+	Tcheck(hp->hd[u]);
+	if (hp->hd[u].b == NULL)
+		return 0;
+	
+	l = hdr[0];
+	
 	if (!header_http_IsHdr(&hp->hd[u], hdr))
 		return 0;
+
+	if (re == NULL)
+		return 1;
+			
 	start = hp->hd[u].b + l;
 	while (*start != '\0' && *start == ' ')
 		start++;
+	
 	if (!*start)
 		return 0;
+	
 	if (VRT_re_match(start,re))
 		return 1;
+	
 	return 0;
 }
 
@@ -115,15 +134,12 @@ header_http_match(const struct http *hp, unsigned u, unsigned l, void *re, const
  * re-stuff added.
  */
 static unsigned
-header_http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re)
+header_http_findhdr(const struct http *hp, const char *hdr, void *re)
 {
         unsigned u;
 
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-                Tcheck(hp->hd[u]);
-		if (hp->hd[u].b == NULL)
-			continue;
-		if (header_http_match(hp, u, l, re, hdr))
+		if (header_http_match(hp, u, re, hdr))
 			return (u);
         }
         return (0);
@@ -134,14 +150,12 @@ header_http_findhdr(const struct http *hp, unsigned l, const char *hdr, void *re
  * it matches the regular expression *re.
  */
 static void
-header_http_Unset(struct http *hp, unsigned l, const char *hdr, void *re)
+header_http_Unset(struct http *hp, const char *hdr, void *re)
 {
 	unsigned u, v;
 
 	for (v = u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-		if (hp->hd[u].b == NULL)
-			continue;
-		if (header_http_match(hp, u, l, re, hdr))
+		if (header_http_match(hp, u, re, hdr))
 			continue;
 		if (v != u) {
 			memcpy(&hp->hd[v], &hp->hd[u], sizeof *hp->hd);
@@ -206,7 +220,7 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 	}
 	
 	hp = header_vrt_selecthttp(sp, e);
-	u = header_http_findhdr(hp,h[0],h,priv->priv);
+	u = header_http_findhdr(hp,h,priv->priv);
 	if (u == 0) {
 		return NULL;
 	}
@@ -218,23 +232,18 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 
 /*
  * Returns the header named as *hdr that also matches the regular
- * expression *re. Blatant copy of http_findhdr() in varnishd, with the
- * re-stuff added.
+ * expression *re.
  */
 static unsigned
-header_http_cphdr(struct sess *sp, const struct http *hp, unsigned l, const char *hdr, enum gethdr_e dst_e, const char *dst_h)
+header_http_cphdr(struct sess *sp, const struct http *hp, const char *hdr, enum gethdr_e dst_e, const char *dst_h)
 {
         unsigned u;
 	char *p;
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-                Tcheck(hp->hd[u]);
-                if (hp->hd[u].e < hp->hd[u].b + l) 
-                        continue;
-                if (hp->hd[u].b[l-1] != ':') 
-                        continue;
-                if (strncasecmp(hdr+1, hp->hd[u].b, l-1))
-                        continue;
-		p = hp->hd[u].b + l;
+		if (!header_http_match(hp, u, NULL, hdr))
+			continue;
+		
+		p = hp->hd[u].b + hdr[0];
 		while (vct_issp(*p))
 			p++;
                 vmod_append(sp, dst_e, dst_h, p,vrt_magic_string_end);
@@ -254,7 +263,7 @@ vmod_copy(struct sess *sp, enum gethdr_e src_e, const char *src_h, enum gethdr_e
 	int ret;
 
 	src_hp = header_vrt_selecthttp(sp, src_e);
-	u = header_http_cphdr(sp,src_hp,src_h[0],src_h,dst_e,dst_h);
+	u = header_http_cphdr(sp,src_hp,src_h,dst_e,dst_h);
 }
 
 /*
@@ -282,7 +291,7 @@ vmod_remove(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char
 	}
 	
 	hp = header_vrt_selecthttp(sp, e);
-	header_http_Unset(hp,h[0],h,priv->priv);
+	header_http_Unset(hp,h,priv->priv);
 }
 
 const char * __match_proto__()
