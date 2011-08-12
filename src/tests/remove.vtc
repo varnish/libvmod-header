@@ -12,6 +12,13 @@ server s1 {
 	rxreq
 	expect req.url == "/nothing"
 	txresp -status 200 -hdr "foo: notok=1" -hdr "foo: ok2k" -hdr "foo: notok=2"
+	rxreq
+	expect req.url == "/blatti1"
+	txresp -status 200 -hdr "foo: notok=1" -hdr "foo:notok=3" -hdr "foo: ok2k" -hdr "foo: notok=2"
+	rxreq
+	expect req.url == "/blatti2"
+	txresp -status 200 -hdr "foo: notok=1" -hdr "foo: ok2k" -hdr "foo:notok=3" -hdr "foo: notok=2"
+	
 } -start
 
 varnish v1 -vcl+backend {
@@ -23,6 +30,12 @@ varnish v1 -vcl+backend {
 		}
 		if (req.url == "/nothing") {
 			header.remove(beresp.http.foo,".");
+		}
+		if (req.url == "/blatti1") {
+			header.remove(beresp.http.foo,"^ no.ok=.$");
+		}
+		if (req.url == "/blatti2") {
+			header.remove(beresp.http.foo,"^no.ok=.$");
 		}
 		if (beresp.http.foo) {
 			set beresp.http.foo-exists = "yes";
@@ -56,5 +69,23 @@ client c3 {
 	rxresp
 	expect resp.status == 200
 	expect resp.http.foo-exists == "no"
+} -run
+
+# Remove with regex - fail due to whitespace
+client c4 {
+	txreq -url "/blatti1"
+	rxresp
+	expect resp.status == 200
+	expect resp.http.foo-exists == "yes"
+	expect resp.http.foo == "notok=1"
+} -run
+
+# Remove with regex - work
+client c4 {
+	txreq -url "/blatti2"
+	rxresp
+	expect resp.status == 200
+	expect resp.http.foo-exists == "yes"
+	expect resp.http.foo == "ok2k"
 } -run
 
