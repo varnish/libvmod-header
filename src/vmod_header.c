@@ -36,17 +36,42 @@
 #include "vcc_if.h"
 #include "config.h"
 
+/*
+ * This mutex is used to avoid having two threads that initializes the same
+ * regex at the same time. While it means that there's a single, global
+ * lock for all libvmod-header actions dealing with regular expressions,
+ * the contention only applies on the first request that calls that
+ * specific function.
+ */
 pthread_mutex_t header_mutex;
 
 /*
- * Stolen bluntly from cache_vrt.c (should be fixed)
- *
+ * Initialize the regex *s on priv, if it hasn't already been done.
+ * XXX: We have to recheck the condition after grabbing the lock to avoid a
+ * XXX: race condition.
+ */
+static void
+header_init_re(struct vmod_priv *priv, const char *s)
+{
+	if (priv->priv == NULL) {
+		assert(pthread_mutex_lock(&header_mutex) == 0);
+		if (priv->priv == NULL) {
+			VRT_re_init(&priv->priv, s);
+			priv->free = VRT_re_fini;
+		}
+		pthread_mutex_unlock(&header_mutex);
+	}
+}
+
+/*
  * Returns the right struct http * to use for a given type of header.
+ * 
+ * FIXME: Stolen bluntly from cache_vrt.c
  */
 static struct http *
 header_vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
 {
-        struct http *hp;
+        struct http *hp=NULL;
 
         CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
         switch (where) {
@@ -73,6 +98,11 @@ header_vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
         return (hp);
 }
 
+/*
+ * Returns true if the *hdr header is the one pointed to by *hh.
+ *
+ * FIXME: duplication from varnishd.
+ */
 static int
 header_http_IsHdr(const txt *hh, const char *hdr)
 {
@@ -129,9 +159,8 @@ header_http_match(const struct http *hp, unsigned u, void *re, const char *hdr)
 }
 
 /*
- * Returns the header named as *hdr that also matches the regular
- * expression *re. Blatant copy of http_findhdr() in varnishd, with the
- * re-stuff added.
+ * Returns the (first) header named as *hdr that also matches the regular
+ * expression *re.
  */
 static unsigned
 header_http_findhdr(const struct http *hp, const char *hdr, void *re)
@@ -146,8 +175,8 @@ header_http_findhdr(const struct http *hp, const char *hdr, void *re)
 }
 
 /*
- * Same as http_Unset(), pluss regex: It removes the header *hdr, assuming
- * it matches the regular expression *re.
+ * Removes all copies of the header that matches *hdr with content that
+ * matches *re. Same as http_Unset(), plus regex.
  */
 static void
 header_http_Unset(struct http *hp, const char *hdr, void *re)
@@ -166,15 +195,45 @@ header_http_Unset(struct http *hp, const char *hdr, void *re)
 	hp->nhd = v;
 }
 
-int
-init_function(struct vmod_priv *priv, const struct VCL_conf *conf)
+/*
+ * Copies all occurrences of *hdr to a destination header *dst_h. Uses
+ * vmod_header_append(), so all copies are kept intact.
+ *
+ * XXX: Not sure I like the idea of iterating a list of headers while
+ * XXX: adding to it. It may be correct now, but perhaps not so much in
+ * XXX: the future.
+ */
+static void
+header_http_cphdr(struct sess *sp,
+		  const struct http *hp,
+		  const char *hdr,
+		  enum gethdr_e dst_e,
+		  const char *dst_h)
 {
-	int ret;
-	ret = pthread_mutex_init(&header_mutex, NULL);
-	assert (ret == 0);
-	return (0);
+        unsigned u;
+	char *p;
+
+        for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
+		if (!header_http_match(hp, u, NULL, hdr))
+			continue;
+		
+		p = hp->hd[u].b + hdr[0];
+		while (vct_issp(*p))
+			p++;
+                vmod_append(sp, dst_e, dst_h, p, vrt_magic_string_end);
+        }
 }
 
+/*
+ * vmod entrypoint. Sets up the header mutex.
+ */
+int
+init_function(struct vmod_priv *priv __attribute__((unused)),
+	      const struct VCL_conf *conf __attribute__((unused)))
+{
+	assert(pthread_mutex_init(&header_mutex, NULL) == 0);
+	return (0);
+}
 
 void __match_proto__()
 vmod_append(struct sess *sp, enum gethdr_e e, const char *h, const char *fmt, ...)
@@ -191,36 +250,21 @@ vmod_append(struct sess *sp, enum gethdr_e e, const char *h, const char *fmt, ..
 	if (b == NULL)
 		WSP(sp, SLT_LostHeader, "vmod_header: %s", h+1);
 	else
-		http_SetHeader(sp->wrk,sp->fd,hp,b);
+		http_SetHeader(sp->wrk, sp->fd, hp, b);
 	va_end(ap);
 }
 
-/*
- * XXX: Needs to be cleaned up a bit
- */
 const char * __match_proto__()
 vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h, const char *s)
 {
 	struct http *hp;
 	unsigned u;
 	char *p;
-	int ret;
 
-	if (priv->priv == NULL) {
-		ret = pthread_mutex_lock(&header_mutex);
-		assert (ret == 0);
-		/*
-		 * Need to re-test to avoid race
-		 */
-		if (priv->priv == NULL) {
-			VRT_re_init(&priv->priv,s);
-			priv->free = VRT_re_fini;
-		}
-		pthread_mutex_unlock(&header_mutex);
-	}
+	header_init_re(priv, s);
 	
 	hp = header_vrt_selecthttp(sp, e);
-	u = header_http_findhdr(hp,h,priv->priv);
+	u = header_http_findhdr(hp, h, priv->priv);
 	if (u == 0) {
 		return NULL;
 	}
@@ -230,72 +274,27 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 	return p;
 }
 
-/*
- * Returns the header named as *hdr that also matches the regular
- * expression *re.
- */
-static unsigned
-header_http_cphdr(struct sess *sp, const struct http *hp, const char *hdr, enum gethdr_e dst_e, const char *dst_h)
-{
-        unsigned u;
-	char *p;
-        for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-		if (!header_http_match(hp, u, NULL, hdr))
-			continue;
-		
-		p = hp->hd[u].b + hdr[0];
-		while (vct_issp(*p))
-			p++;
-                vmod_append(sp, dst_e, dst_h, p,vrt_magic_string_end);
-        }
-        return (0);
-}
-
-/*
- * XXX: Needs to be cleaned up a bit
- */
 void __match_proto__()
 vmod_copy(struct sess *sp, enum gethdr_e src_e, const char *src_h, enum gethdr_e dst_e, const char *dst_h)
 {
 	struct http *src_hp;
-	unsigned u;
-	char *p;
-	int ret;
 
 	src_hp = header_vrt_selecthttp(sp, src_e);
-	u = header_http_cphdr(sp,src_hp,src_h,dst_e,dst_h);
+	header_http_cphdr(sp, src_hp, src_h, dst_e, dst_h);
 }
 
-/*
- * XXX: Needs to be cleaned up a bit
- */
 void __match_proto__()
 vmod_remove(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h, const char *s)
 {
 	struct http *hp;
-	unsigned u;
-	char *p;
-	int ret;
 
-	if (priv->priv == NULL) {
-		ret = pthread_mutex_lock(&header_mutex);
-		assert (ret == 0);
-		/*
-		 * Need to re-test to avoid race
-		 */
-		if (priv->priv == NULL) {
-			VRT_re_init(&priv->priv,s);
-			priv->free = VRT_re_fini;
-		}
-		pthread_mutex_unlock(&header_mutex);
-	}
-	
+	header_init_re(priv, s);
 	hp = header_vrt_selecthttp(sp, e);
-	header_http_Unset(hp,h,priv->priv);
+	header_http_Unset(hp, h, priv->priv);
 }
 
 const char * __match_proto__()
-vmod_version(struct sess *sp)
+vmod_version(struct sess *sp __attribute__((unused)))
 {
 	return VERSION;
 }

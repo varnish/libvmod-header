@@ -65,6 +65,71 @@ if test "x$VMODDIR" = x; then
 	fi
 fi
 
+
+# This corresponds to FreeBSD's WARNS level 6
+DEVELOPER_CFLAGS="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wshadow -Wcast-align -Wchar-subscripts -Winline -Wnested-externs -Wredundant-decls -Wformat"
+
+# Additional flags for GCC 4
+EXTRA_DEVELOPER_CFLAGS="-Wextra -Wno-missing-field-initializers -Wno-sign-compare"
+
+# --enable-developer-warnings
+AC_ARG_ENABLE(developer-warnings,
+	AS_HELP_STRING([--enable-developer-warnings],[enable strict warnings (default is NO)]),
+	CFLAGS="${CFLAGS} ${DEVELOPER_CFLAGS}")
+
+# --enable-debugging-symbols
+AC_ARG_ENABLE(debugging-symbols,
+	AS_HELP_STRING([--enable-debugging-symbols],[enable debugging symbols (default is NO)]),
+	CFLAGS="${CFLAGS} -O0 -g -fno-inline")
+
+# --enable-diagnostics
+AC_ARG_ENABLE(diagnostics,
+	AS_HELP_STRING([--enable-diagnostics],[enable run-time diagnostics (default is NO)]),
+	CFLAGS="${CFLAGS} -DDIAGNOSTICS")
+
+# --enable-extra-developer-warnings
+AC_ARG_ENABLE(extra-developer-warnings,
+	AS_HELP_STRING([--enable-extra-developer-warnings],[enable even stricter warnings (default is NO)]),
+	[],
+	[enable_extra_developer_warnings=no])
+
+if test "x$enable_stack_protector" != "xno"; then
+	save_CFLAGS="$CFLAGS"
+	CFLAGS="${CFLAGS} ${EXTRA_DEVELOPER_CFLAGS}"
+	AC_COMPILE_IFELSE(
+		[AC_LANG_PROGRAM([],[],[])],
+		[],
+		[AC_MSG_WARN([All of ${EXTRA_DEVELOPER_CFLAGS} not supported, disabling])
+		    CFLAGS="$save_CFLAGS"])
+fi
+
+# --enable-stack-protector
+AC_ARG_ENABLE(stack-protector,
+	AS_HELP_STRING([--enable-stack-protector],[enable stack protector (default is NO)]),
+	[],
+	[enable_stack_protector=no])
+
+if test "x$enable_stack_protector" != "xno"; then
+	save_CFLAGS="$CFLAGS"
+	CFLAGS="${CFLAGS} -fstack-protector-all"
+	AC_COMPILE_IFELSE(
+		[AC_LANG_PROGRAM([],[],[])],
+		[],
+		[AC_MSG_WARN([-fstack-protector not supported, disabling])
+		    CFLAGS="$save_CFLAGS"])
+fi
+
+# --enable-tests
+AC_ARG_ENABLE(tests,
+	AS_HELP_STRING([--enable-tests],[build test programs (default is NO)]))
+AM_CONDITIONAL([ENABLE_TESTS], [test x$enable_tests = xyes])
+
+# --enable-werror
+AC_ARG_ENABLE(werror,
+	AS_HELP_STRING([--enable-werror],[use -Werror (default is NO)]),
+	CFLAGS="${CFLAGS} -Werror")
+
+
 AC_CONFIG_FILES([
 	Makefile
 	src/Makefile
