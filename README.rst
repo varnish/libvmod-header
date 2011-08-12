@@ -141,6 +141,15 @@ part of Varnish Cache 3.0 and beyond.
 
 Also thanks to: Imo Klabun and Anders Nordby for bug reports.
 
+HISTORY
+=======
+
+Version 0.1 Initial version, somewhat ambiguous where it starts and ends
+
+Version 0.2 Bug fixes for string removal
+
+Version 0.3 Bug fixes for get/remove
+
 BUGS
 ====
 
