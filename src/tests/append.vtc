@@ -12,7 +12,7 @@ server s1 {
 } -start
 
 varnish v1 -vcl+backend {
-	import header;
+	import header from "${vmod_topbuild}/src/.libs/libvmod_header.so";
 
 	sub vcl_fetch {
 		if (req.url == "/foo") {
