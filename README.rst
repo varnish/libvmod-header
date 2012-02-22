@@ -165,7 +165,7 @@ SEE ALSO
 
 * varnishd(1)
 * vcl(7)
-* https://github.com/KristianLyng/libvmod-header
+* https://github.com/varnish/libvmod-header
 
 COPYRIGHT
 =========
