@@ -1,0 +1,12 @@
+Source: libvmod-header
+Section: web
+Priority: optional
+Maintainer: Rich Healey <richo@99designs.com>
+Build-Depends: varnish (>= 3), build-essential, python-docutils
+Standards-Version: 3.7.2
+
+Package: libvmod-header
+Architecture: any
+Depends: varnish (>= 3)
+Description: Varnish Module (vmod) for manipulation of duplicated headers (for instance
+ multiple set-cookie headers).
