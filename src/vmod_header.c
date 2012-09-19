@@ -125,7 +125,7 @@ header_http_IsHdr(const txt *hh, const char *hdr)
  * header, a match is returned.
  */
 static int
-header_http_match(const struct http *hp, unsigned u, void *re, const char *hdr)
+header_http_match(const struct sess *sp, const struct http *hp, unsigned u, void *re, const char *hdr)
 {
 	char *start;
 	unsigned l;
@@ -152,7 +152,7 @@ header_http_match(const struct http *hp, unsigned u, void *re, const char *hdr)
 	if (!*start)
 		return 0;
 	
-	if (VRT_re_match(start,re))
+	if (VRT_re_match(sp, start, re))
 		return 1;
 	
 	return 0;
@@ -163,12 +163,12 @@ header_http_match(const struct http *hp, unsigned u, void *re, const char *hdr)
  * expression *re.
  */
 static unsigned
-header_http_findhdr(const struct http *hp, const char *hdr, void *re)
+header_http_findhdr(const struct sess *sp, const struct http *hp, const char *hdr, void *re)
 {
         unsigned u;
 
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-		if (header_http_match(hp, u, re, hdr))
+		if (header_http_match(sp, hp, u, re, hdr))
 			return (u);
         }
         return (0);
@@ -179,12 +179,12 @@ header_http_findhdr(const struct http *hp, const char *hdr, void *re)
  * matches *re. Same as http_Unset(), plus regex.
  */
 static void
-header_http_Unset(struct http *hp, const char *hdr, void *re)
+header_http_Unset(struct sess *sp, struct http *hp, const char *hdr, void *re)
 {
 	unsigned u, v;
 
 	for (v = u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-		if (header_http_match(hp, u, re, hdr))
+		if (header_http_match(sp, hp, u, re, hdr))
 			continue;
 		if (v != u) {
 			memcpy(&hp->hd[v], &hp->hd[u], sizeof *hp->hd);
@@ -214,7 +214,7 @@ header_http_cphdr(struct sess *sp,
 	char *p;
 
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-		if (!header_http_match(hp, u, NULL, hdr))
+		if (!header_http_match(sp, hp, u, NULL, hdr))
 			continue;
 		
 		p = hp->hd[u].b + hdr[0];
@@ -264,7 +264,7 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 	header_init_re(priv, s);
 	
 	hp = header_vrt_selecthttp(sp, e);
-	u = header_http_findhdr(hp, h, priv->priv);
+	u = header_http_findhdr(sp, hp, h, priv->priv);
 	if (u == 0) {
 		return NULL;
 	}
@@ -290,7 +290,7 @@ vmod_remove(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char
 
 	header_init_re(priv, s);
 	hp = header_vrt_selecthttp(sp, e);
-	header_http_Unset(hp, h, priv->priv);
+	header_http_Unset(sp, hp, h, priv->priv);
 }
 
 const char * __match_proto__()
