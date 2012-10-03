@@ -37,6 +37,10 @@ rm -rf %{buildroot}
 /usr/lib64/varnish/vmods/
 %doc /usr/share/doc/%{name}/*
 %{_mandir}/man?/*gz
+# seems to be placed here on el5.
+/usr/man/man?/*gz
+
+
 
 %changelog
 * Wed Oct 03 2012 Lasse Karstensen <lasse@varnish-software.com> - 0.1-0.20120918
