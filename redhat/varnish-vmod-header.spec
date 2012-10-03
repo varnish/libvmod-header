@@ -36,10 +36,13 @@ rm -rf %{buildroot}
 # /opt/varnish/lib/varnish/vmods/
 /usr/lib64/varnish/vmods/
 %doc /usr/share/doc/%{name}/*
-%{_mandir}/man?/*gz
-# seems to be placed here on el5.
-/usr/man/man?/*gz
 
+%if %{IS_EL5}
+# seems to be placed here on el5. use rpmbuild --define IS_EL5=1
+/usr/man/man?/*gz
+%else
+%{_mandir}/man?/*gz
+%endif
 
 
 %changelog
