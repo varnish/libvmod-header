@@ -37,13 +37,12 @@ rm -rf %{buildroot}
 /usr/lib64/varnish/vmods/
 %doc /usr/share/doc/%{name}/*
 
-#%if %{IS_EL5}
-# seems to be placed here on el5. use rpmbuild --define "IS_EL5 1"
-/usr/man/man?/*gz
-#%else
-#%{_mandir}/man?/*gz
-#%endif
 
+%if "%{RHVERSION}" == "EL5"
+/usr/man/man?/*
+%else
+/usr/share/man/man?/*
+%endif 
 
 %changelog
 * Wed Oct 03 2012 Lasse Karstensen <lasse@varnish-software.com> - 0.1-0.20120918
