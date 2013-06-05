@@ -120,8 +120,8 @@ binary installation).
 4. `make install` (may require root: sudo make install)
 5. `make check` (Optional for regression tests)
 
-VARNISHSRCDIR is the directory of the Varnish source tree for which to
-compile your vmod. Both the VARNISHSRCDIR and VARNISHSRCDIR/include
+VARNISHSRC is the directory of the Varnish source tree for which to
+compile your vmod. Both the VARNISHSRC and VARNISHSRC/include
 will be added to the include search paths for your module.
 
 Optionally you can also set the vmod install dir by adding VMODDIR=DIR
