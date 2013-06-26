@@ -132,7 +132,7 @@ installation).
 ACKNOWLEDGEMENTS
 ================
 
-The development of this plugin was made possible by the sponsorship of 
+The development of this plugin was made possible by the sponsorship of
 Softonic, http://en.softonic.com/ .
 
 Author: Kristian Lyngstøl <kristian@varnish-software.com>, Varnish Software AS
@@ -173,4 +173,4 @@ COPYRIGHT
 This document is licensed under the same license as the
 libvmod-header project. See LICENSE for details.
 
-* Copyright (c) 2011 Varnish Software
+* Copyright (c) 2011-2013 Varnish Software

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2011 Varnish Software AS
+ * Copyright (c) 2011-2013 Varnish Software AS
  * All rights reserved.
  *
  * Author: Kristian Lyngstol <kristian@bohemians.org>
@@ -65,7 +65,7 @@ header_init_re(struct vmod_priv *priv, const char *s)
 
 /*
  * Returns the right struct http * to use for a given type of header.
- * 
+ *
  * FIXME: Stolen bluntly from cache_vrt.c
  */
 static struct http *
@@ -129,32 +129,32 @@ header_http_match(const struct sess *sp, const struct http *hp, unsigned u, void
 {
 	char *start;
 	unsigned l;
-	
+
 	assert(hdr);
 	assert(hp);
-	
+
 	Tcheck(hp->hd[u]);
 	if (hp->hd[u].b == NULL)
 		return 0;
-	
+
 	l = hdr[0];
-	
+
 	if (!header_http_IsHdr(&hp->hd[u], hdr))
 		return 0;
 
 	if (re == NULL)
 		return 1;
-			
+
 	start = hp->hd[u].b + l;
 	while (*start != '\0' && *start == ' ')
 		start++;
-	
+
 	if (!*start)
 		return 0;
-	
+
 	if (VRT_re_match(sp, start, re))
 		return 1;
-	
+
 	return 0;
 }
 
@@ -216,7 +216,7 @@ header_http_cphdr(struct sess *sp,
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
 		if (!header_http_match(sp, hp, u, NULL, hdr))
 			continue;
-		
+
 		p = hp->hd[u].b + hdr[0];
 		while (vct_issp(*p))
 			p++;
@@ -243,7 +243,7 @@ vmod_append(struct sess *sp, enum gethdr_e e, const char *h, const char *fmt, ..
 	char *b;
 	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
 	assert(fmt != NULL);
-	
+
 	hp = header_vrt_selecthttp(sp, e);
 	va_start(ap, fmt);
 	b = VRT_String(hp->ws, h + 1, fmt, ap);
@@ -262,7 +262,7 @@ vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h
 	char *p;
 
 	header_init_re(priv, s);
-	
+
 	hp = header_vrt_selecthttp(sp, e);
 	u = header_http_findhdr(sp, hp, h, priv->priv);
 	if (u == 0) {
