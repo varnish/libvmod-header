@@ -4,6 +4,7 @@ SUBDIRS = src
 
 dist_man_MANS = vmod_header.3
 MAINTAINERCLEANFILES = $(dist_man_MANS)
+EXTRA_DIST = README.rst
 
 vmod_header.3: README.rst
 if HAVE_RST2MAN
