@@ -3,7 +3,7 @@ AC_COPYRIGHT([Copyright (c) 2011 Varnish Software AS])
 AC_INIT([libvmod-header], [0.3])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(src/vmod_header.vcc)
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
 AC_CANONICAL_SYSTEM
 AC_LANG(C)
@@ -45,7 +45,7 @@ if test "x$VARNISHSRC" = x; then
 	AC_MSG_ERROR([No Varnish source tree specified])
 fi
 VARNISHSRC=`cd $VARNISHSRC && pwd`
-AC_CHECK_FILE([$VARNISHSRC/include/varnishapi.h],
+AC_CHECK_FILE([$VARNISHSRC/include/vcl.h],
 	[],
 	[AC_MSG_FAILURE(["$VARNISHSRC" is not a Varnish source directory])]
 )

@@ -10,8 +10,8 @@ libvmod_header_la_SOURCES = \
 	vcc_if.h \
 	vmod_header.c
 
-vcc_if.c vcc_if.h: $(VARNISHSRC)/lib/libvmod_std/vmod.py $(top_srcdir)/src/vmod_header.vcc
-	@PYTHON@ $(VARNISHSRC)/lib/libvmod_std/vmod.py $(top_srcdir)/src/vmod_header.vcc
+vcc_if.c vcc_if.h: $(VARNISHSRC)/lib/libvcl/vmodtool.py $(top_srcdir)/src/vmod_header.vcc
+	@PYTHON@ $(VARNISHSRC)/lib/libvcl/vmodtool.py $(top_srcdir)/src/vmod_header.vcc
 
 VMOD_TESTS = tests/*.vtc
 .PHONY: $(VMOD_TESTS)
