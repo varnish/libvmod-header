@@ -1,0 +1,5 @@
+libvmod-header (0.3) unstable; urgency=low
+
+  * Initial creation of debian scripts
+
+ -- Rich Healey <richo@psych0tik.net>  Thu, 02 Aug 2012 05:02:08 +1000
