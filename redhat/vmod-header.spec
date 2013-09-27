@@ -18,7 +18,7 @@ libvmod-header
 %build
 # this assumes that VARNISHSRC is defined on the rpmbuild command line, like this:
 # rpmbuild -bb --define 'VARNISHSRC /home/user/rpmbuild/BUILD/varnish-3.0.3' redhat/*spec
-./configure VARNISHSRC=%{VARNISHSRC} VMODDIR=/usr/lib64/varnish/vmods/ --prefix=/usr/
+./configure VARNISHSRC=%{VARNISHSRC} VMODDIR=/usr/lib64/varnish/vmods/ --prefix=/usr/  --docdir='${datarootdir}/doc/%{name}'
 make
 
 %install
@@ -32,16 +32,9 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-# /opt/varnish/lib/varnish/vmods/
-/usr/lib64/varnish/vmods/
+%{_libdir}/varnish/vmods/
 %doc /usr/share/doc/%{name}/*
-
-
-%if "%{RHVERSION}" == "EL5"
-/usr/man/man?/*
-%else
-/usr/share/man/man?/*
-%endif 
+%{_mandir}/man?/*
 
 %changelog
 * Wed Oct 03 2012 Lasse Karstensen <lasse@varnish-software.com> - 0.1-0.20120918
