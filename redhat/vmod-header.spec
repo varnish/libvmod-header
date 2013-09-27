@@ -16,7 +16,6 @@ libvmod-header
 %setup -n libvmod-header
 
 %build
-./autogen.sh
 # this assumes that VARNISHSRC is defined on the rpmbuild command line, like this:
 # rpmbuild -bb --define 'VARNISHSRC /home/user/rpmbuild/BUILD/varnish-3.0.3' redhat/*spec
 ./configure VARNISHSRC=%{VARNISHSRC} VMODDIR=/usr/lib64/varnish/vmods/ --prefix=/usr/
