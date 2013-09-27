@@ -1,5 +1,5 @@
 Summary: Header VMOD for Varnish VCL
-Name: vmod-varnish-header
+Name: vmod-header
 Version: 0.1
 Release: 1%{?dist}
 License: BSD
