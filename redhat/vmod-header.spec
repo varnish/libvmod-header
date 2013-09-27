@@ -1,6 +1,5 @@
-# %define VARNISHVER 3.0.3
 Summary: Header VMOD for Varnish VCL
-Name: vmod-varnish-%{VARNISHVER}-header
+Name: vmod-varnish-header
 Version: 0.1
 Release: 1%{?dist}
 License: BSD
