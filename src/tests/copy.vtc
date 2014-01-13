@@ -16,8 +16,8 @@ server s1 {
 varnish v1 -vcl+backend {
 	import header from "${vmod_topbuild}/src/.libs/libvmod_header.so";
 
-	sub vcl_fetch {
-		if (req.url == "/foo") {
+	sub vcl_backend_response {
+		if (bereq.url == "/foo") {
 			header.copy(beresp.http.foo,beresp.http.bar);
 			set beresp.http.x-one = header.get(beresp.http.bar,"one");
 			set beresp.http.x-two = header.get(beresp.http.bar,"two");

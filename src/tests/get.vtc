@@ -15,10 +15,10 @@ server s1 {
 varnish v1 -vcl+backend {
 	import header from "${vmod_topbuild}/src/.libs/libvmod_header.so";
 
-	sub vcl_fetch {
-		if (req.url == "/") {
+	sub vcl_backend_response {
+		if (bereq.url == "/") {
 			set beresp.http.xusr = header.get(beresp.http.foo,"realcookie=");
-		} elsif (req.url == "/two") {
+		} elsif (bereq.url == "/two") {
 			set beresp.http.xusr = header.get(beresp.http.foo,"^realcookie=");
 		}
 		return(deliver);

@@ -20,11 +20,12 @@ server s1 {
 varnish v1 -vcl+backend {
 	import header from "${vmod_topbuild}/src/.libs/libvmod_header.so";
 
-	sub vcl_fetch {
-		if (req.url == "/foo") {
+	sub vcl_backend_response {
+		if (bereq.url == "/foo") {
 			header.remove(beresp.http.foo,"one=1");
 		}
-		return(hit_for_pass);
+
+		set beresp.uncacheable = true;
 	}
 } -start
 

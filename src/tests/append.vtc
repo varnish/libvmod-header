@@ -14,10 +14,10 @@ server s1 {
 varnish v1 -vcl+backend {
 	import header from "${vmod_topbuild}/src/.libs/libvmod_header.so";
 
-	sub vcl_fetch {
-		if (req.url == "/foo") {
+	sub vcl_backend_response {
+		if (bereq.url == "/foo") {
 			set beresp.http.foo = "null";
-		} elsif ( req.url == "/bar") {
+		} elsif ( bereq.url == "/bar") {
 			header.append(beresp.http.foo, "blatti");
 		}
 		return(deliver);

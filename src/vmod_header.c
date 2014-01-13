@@ -30,8 +30,7 @@
 #include <pthread.h>
 
 #include "vrt.h"
-#include "bin/varnishd/cache.h"
-#include "include/vct.h"
+#include "cache/cache.h"
 
 #include "vcc_if.h"
 #include "config.h"
@@ -69,33 +68,31 @@ header_init_re(struct vmod_priv *priv, const char *s)
  * FIXME: Stolen bluntly from cache_vrt.c
  */
 static struct http *
-header_vrt_selecthttp(const struct sess *sp, enum gethdr_e where)
+header_vrt_selecthttp(const struct vrt_ctx *ctx, enum gethdr_e where)
 {
-        struct http *hp=NULL;
+	struct http *hp;
 
-        CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
-        switch (where) {
-        case HDR_REQ:
-                hp = sp->http;
-                break;
-        case HDR_BEREQ:
-                hp = sp->wrk->bereq;
-                break;
-        case HDR_BERESP:
-                hp = sp->wrk->beresp;
-                break;
-        case HDR_RESP:
-                hp = sp->wrk->resp;
-                break;
-        case HDR_OBJ:
-                CHECK_OBJ_NOTNULL(sp->obj, OBJECT_MAGIC);
-                hp = sp->obj->http;
-                break;
-        default:
-                assert("ops");
-        }
-        CHECK_OBJ_NOTNULL(hp, HTTP_MAGIC);
-        return (hp);
+	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
+	switch (where) {
+	case HDR_REQ:
+		hp = ctx->http_req;
+		break;
+	case HDR_BEREQ:
+		hp = ctx->http_bereq;
+		break;
+	case HDR_BERESP:
+		hp = ctx->http_beresp;
+		break;
+	case HDR_RESP:
+		hp = ctx->http_resp;
+		break;
+	case HDR_OBJ:
+		hp = ctx->http_obj;
+		break;
+	default:
+		WRONG("vrt_selecthttp 'where' invalid");
+	}
+	return (hp);
 }
 
 /*
@@ -125,7 +122,7 @@ header_http_IsHdr(const txt *hh, const char *hdr)
  * header, a match is returned.
  */
 static int
-header_http_match(const struct sess *sp, const struct http *hp, unsigned u, void *re, const char *hdr)
+header_http_match(const struct vrt_ctx *ctx, const struct http *hp, unsigned u, void *re, const char *hdr)
 {
 	char *start;
 	unsigned l;
@@ -152,7 +149,7 @@ header_http_match(const struct sess *sp, const struct http *hp, unsigned u, void
 	if (!*start)
 		return 0;
 	
-	if (VRT_re_match(sp, start, re))
+	if (VRT_re_match(ctx, start, re))
 		return 1;
 	
 	return 0;
@@ -163,12 +160,12 @@ header_http_match(const struct sess *sp, const struct http *hp, unsigned u, void
  * expression *re.
  */
 static unsigned
-header_http_findhdr(const struct sess *sp, const struct http *hp, const char *hdr, void *re)
+header_http_findhdr(const struct vrt_ctx *ctx, const struct http *hp, const char *hdr, void *re)
 {
         unsigned u;
 
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-		if (header_http_match(sp, hp, u, re, hdr))
+		if (header_http_match(ctx, hp, u, re, hdr))
 			return (u);
         }
         return (0);
@@ -179,12 +176,14 @@ header_http_findhdr(const struct sess *sp, const struct http *hp, const char *hd
  * matches *re. Same as http_Unset(), plus regex.
  */
 static void
-header_http_Unset(struct sess *sp, struct http *hp, const char *hdr, void *re)
+header_http_Unset(const struct vrt_ctx *ctx, struct http *hp, const char *hdr, void *re)
 {
 	unsigned u, v;
 
 	for (v = u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-		if (header_http_match(sp, hp, u, re, hdr))
+		if (hp->hd[u].b == NULL)
+			continue;
+		if (header_http_match(ctx, hp, u, re, hdr))
 			continue;
 		if (v != u) {
 			memcpy(&hp->hd[v], &hp->hd[u], sizeof *hp->hd);
@@ -204,23 +203,22 @@ header_http_Unset(struct sess *sp, struct http *hp, const char *hdr, void *re)
  * XXX: the future.
  */
 static void
-header_http_cphdr(struct sess *sp,
+header_http_cphdr(const struct vrt_ctx *ctx,
 		  const struct http *hp,
 		  const char *hdr,
-		  enum gethdr_e dst_e,
-		  const char *dst_h)
+		  VCL_HEADER dst)
 {
         unsigned u;
 	char *p;
 
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
-		if (!header_http_match(sp, hp, u, NULL, hdr))
+		if (!header_http_match(ctx, hp, u, NULL, hdr))
 			continue;
 		
 		p = hp->hd[u].b + hdr[0];
-		while (vct_issp(*p))
+		while (*p == ' ' || *p == '\t')
 			p++;
-                vmod_append(sp, dst_e, dst_h, p, vrt_magic_string_end);
+                vmod_append(ctx, dst, p, vrt_magic_string_end);
         }
 }
 
@@ -235,66 +233,72 @@ init_function(struct vmod_priv *priv __attribute__((unused)),
 	return (0);
 }
 
-void __match_proto__()
-vmod_append(struct sess *sp, enum gethdr_e e, const char *h, const char *fmt, ...)
+VCL_VOID __match_proto__()
+vmod_append(const struct vrt_ctx *ctx, VCL_HEADER hdr, const char *fmt, ...)
 {
 	va_list ap;
 	struct http *hp;
-	char *b;
-	CHECK_OBJ_NOTNULL(sp, SESS_MAGIC);
+	const char *b;
+
+	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	assert(fmt != NULL);
 	
-	hp = header_vrt_selecthttp(sp, e);
+	hp = header_vrt_selecthttp(ctx, hdr->where);
 	va_start(ap, fmt);
-	b = VRT_String(hp->ws, h + 1, fmt, ap);
+	b = VRT_String(hp->ws, hdr->what + 1, fmt, ap);
 	if (b == NULL)
-		WSP(sp, SLT_LostHeader, "vmod_header: %s", h+1);
+		VSLb(ctx->vsl, SLT_LostHeader, "vmod_header: %s", hdr->what + 1);
 	else
-		http_SetHeader(sp->wrk, sp->fd, hp, b);
+ 		http_SetHeader(hp, b);
 	va_end(ap);
 }
 
-const char * __match_proto__()
-vmod_get(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h, const char *s)
+VCL_STRING __match_proto__()
+vmod_get(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_HEADER hdr, VCL_STRING s)
 {
 	struct http *hp;
 	unsigned u;
 	char *p;
 
+	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	header_init_re(priv, s);
 	
-	hp = header_vrt_selecthttp(sp, e);
-	u = header_http_findhdr(sp, hp, h, priv->priv);
+	hp = header_vrt_selecthttp(ctx, hdr->where);
+	u = header_http_findhdr(ctx, hp, hdr->what, priv->priv);
 	if (u == 0) {
 		return NULL;
 	}
-	p = hp->hd[u].b + h[0];
-	while (vct_issp(*p))
+	p = hp->hd[u].b + hdr->what[0];
+	while (*p == ' ' || *p == '\t')
 		p++;
 	return p;
 }
 
-void __match_proto__()
-vmod_copy(struct sess *sp, enum gethdr_e src_e, const char *src_h, enum gethdr_e dst_e, const char *dst_h)
+VCL_VOID  __match_proto__()
+vmod_copy(const struct vrt_ctx *ctx, VCL_HEADER src, VCL_HEADER dst)
 {
 	struct http *src_hp;
 
-	src_hp = header_vrt_selecthttp(sp, src_e);
-	header_http_cphdr(sp, src_hp, src_h, dst_e, dst_h);
+	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
+	
+	src_hp = header_vrt_selecthttp(ctx, src->where);
+	header_http_cphdr(ctx, src_hp, src->what, dst);
 }
 
-void __match_proto__()
-vmod_remove(struct sess *sp, struct vmod_priv *priv, enum gethdr_e e, const char *h, const char *s)
+VCL_VOID  __match_proto__()
+vmod_remove(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_HEADER hdr, VCL_STRING s)
 {
 	struct http *hp;
 
+	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	header_init_re(priv, s);
-	hp = header_vrt_selecthttp(sp, e);
-	header_http_Unset(sp, hp, h, priv->priv);
+	
+	hp = header_vrt_selecthttp(ctx, hdr->where);
+	header_http_Unset(ctx, hp, hdr->what, priv->priv);
 }
 
-const char * __match_proto__()
-vmod_version(struct sess *sp __attribute__((unused)))
+VCL_STRING __match_proto__()
+vmod_version(const struct vrt_ctx *ctx __attribute__((unused)))
 {
 	return VERSION;
 }

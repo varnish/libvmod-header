@@ -27,20 +27,20 @@ server s1 {
 varnish v1 -vcl+backend {
 	import header from "${vmod_topbuild}/src/.libs/libvmod_header.so";
 
-	sub vcl_fetch {
-		if (req.url == "/foo") {
+	sub vcl_backend_response {
+		if (bereq.url == "/foo") {
 			header.remove(beresp.http.foo,"notok");
 		}
-		if (req.url == "/nothing") {
+		if (bereq.url == "/nothing") {
 			header.remove(beresp.http.foo,".");
 		}
-		if (req.url == "/blatti1") {
+		if (bereq.url == "/blatti1") {
 			header.remove(beresp.http.foo,"^ no.ok=.$");
 		}
-		if (req.url == "/blatti2") {
+		if (bereq.url == "/blatti2") {
 			header.remove(beresp.http.foo,"^no.ok=.$");
 		}
-		if (req.url == "/blatti3") {
+		if (bereq.url == "/blatti3") {
 			header.remove(beresp.http.set-cookie,"^(?!(funcookie=))");
 		}
 		if (beresp.http.foo) {
