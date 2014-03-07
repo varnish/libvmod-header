@@ -1,0 +1,12 @@
+Source: libvmod-header
+Section: web
+Priority: extra
+Maintainer: Varnish Software AS <support@varnish-software.com>
+Build-Depends: debhelper (>= 7), build-essential, python-docutils
+Standards-Version: 3.8.1
+Vcs-Git: git://github.com/varnish/libvmod-header.git
+
+Package: libvmod-header
+Architecture: any
+Depends: varnish, ${misc:Depends}
+Description: Header manipulation in Varnish VCL

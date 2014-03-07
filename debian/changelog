@@ -1,0 +1,5 @@
+libvmod-header (0.1) unstable; urgency=low
+
+  * First version
+
+ -- Lasse Karstensen <lasse@varnish-software.com>  Fri,  7 Mar 2014 14:49:00 +0100
