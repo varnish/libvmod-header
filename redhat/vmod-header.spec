@@ -1,4 +1,4 @@
-Summary: Header VMOD for Varnish VCL
+Summary: Header VMOD for Varnish %{VARNISHVER}
 Name: vmod-header
 Version: 0.1
 Release: 1%{?dist}
@@ -10,7 +10,7 @@ Requires: varnish > 3.0
 BuildRequires: make, autoconf, automake, libtool, python-docutils
 
 %description
-libvmod-header
+Header VMOD for Varnish %{VARNISHVER}.
 
 %prep
 %setup -n libvmod-header
