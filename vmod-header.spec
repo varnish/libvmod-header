@@ -1,7 +1,7 @@
 Summary: Header VMOD for Varnish %{VARNISHVER}
 Name: vmod-header
 Version: 0.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: BSD
 Group: System Environment/Daemons
 Source0: ./libvmod-header.tar.gz
