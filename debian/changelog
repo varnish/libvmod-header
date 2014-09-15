@@ -1,3 +1,9 @@
+libvmod-header (0.3) unstable; urgency=medium
+
+  * Align versioning with autoconf. No other changes.
+
+ -- Lasse Karstensen <lkarsten@varnish-software.com>  Mon, 15 Sep 2014 16:45:13 +0200
+
 libvmod-header (0.1) unstable; urgency=low
 
   * First version
