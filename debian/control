@@ -8,5 +8,5 @@ Vcs-Git: git://github.com/varnish/libvmod-header.git
 
 Package: libvmod-header
 Architecture: any
-Depends: varnish, ${misc:Depends}
+Depends: varnish, ${Varnish:ABI}, ${misc:Depends}
 Description: Header manipulation in Varnish VCL
