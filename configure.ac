@@ -45,7 +45,8 @@ VARNISH_VMOD_DIR
 VARNISH_VMODTOOL
 
 AC_PATH_PROG([VARNISHTEST], [varnishtest])
-AC_PATH_PROG([VARNISHD], [varnishd])
+AC_PATH_PROG([VARNISHD], [varnishd], [],
+    [$PATH:$PATH:`pkg-config varnishapi --variable=sbindir`])
 
 # This corresponds to FreeBSD's WARNS level 6
 DEVELOPER_CFLAGS="-Wall -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings -Wswitch -Wshadow -Wcast-align -Wchar-subscripts -Winline -Wnested-externs -Wredundant-decls -Wformat"
