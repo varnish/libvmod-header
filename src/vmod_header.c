@@ -86,9 +86,6 @@ header_vrt_selecthttp(const struct vrt_ctx *ctx, enum gethdr_e where)
 	case HDR_RESP:
 		hp = ctx->http_resp;
 		break;
-	case HDR_OBJ:
-		hp = ctx->http_obj;
-		break;
 	default:
 		WRONG("vrt_selecthttp 'where' invalid");
 	}
