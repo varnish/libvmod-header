@@ -124,7 +124,7 @@ header_http_IsHdr(const txt *hh, const char *hdr)
 static int
 header_http_match(const struct vrt_ctx *ctx, const struct http *hp, unsigned u, void *re, const char *hdr)
 {
-	char *start;
+	const char *start;
 	unsigned l;
 
 	assert(hdr);
@@ -208,7 +208,7 @@ header_http_cphdr(const struct vrt_ctx *ctx,
 		  VCL_HEADER dst)
 {
         unsigned u;
-	char *p;
+	const char *p;
 
         for (u = HTTP_HDR_FIRST; u < hp->nhd; u++) {
 		if (!header_http_match(ctx, hp, u, NULL, hdr))
@@ -257,7 +257,7 @@ vmod_get(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_HEADER hdr, VCL_
 {
 	struct http *hp;
 	unsigned u;
-	char *p;
+	const char *p;
 
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	header_init_re(priv, s);
