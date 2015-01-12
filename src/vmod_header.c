@@ -62,13 +62,10 @@ header_init_re(struct vmod_priv *priv, const char *s)
 	}
 }
 
-/*
- * Returns the right struct http * to use for a given type of header.
- *
- * FIXME: Stolen bluntly from cache_vrt.c
- */
+#if !defined(VRT_MINOR_VERSION) || !defined(VRT_MAJOR_VERSION) || \
+    (VRT_MAJOR_VERSION < 2 || VRT_MINOR_VERSION < 2)
 static struct http *
-header_vrt_selecthttp(const struct vrt_ctx *ctx, enum gethdr_e where)
+VRT_selecthttp(const struct vrt_ctx *ctx, enum gethdr_e where)
 {
 	struct http *hp;
 
@@ -86,14 +83,17 @@ header_vrt_selecthttp(const struct vrt_ctx *ctx, enum gethdr_e where)
 	case HDR_RESP:
 		hp = ctx->http_resp;
 		break;
+#if !defined(VRT_MAJOR_VERSION) || (VRT_MAJOR_VERSION < 2)
 	case HDR_OBJ:
 		hp = ctx->http_obj;
 		break;
+#endif
 	default:
-		WRONG("vrt_selecthttp 'where' invalid");
+		WRONG("VRT_selecthttp 'where' invalid");
 	}
 	return (hp);
 }
+#endif
 
 /*
  * Returns true if the *hdr header is the one pointed to by *hh.
@@ -242,7 +242,7 @@ vmod_append(const struct vrt_ctx *ctx, VCL_HEADER hdr, const char *fmt, ...)
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	assert(fmt != NULL);
 	
-	hp = header_vrt_selecthttp(ctx, hdr->where);
+	hp = VRT_selecthttp(ctx, hdr->where);
 	va_start(ap, fmt);
 	b = VRT_String(hp->ws, hdr->what + 1, fmt, ap);
 	if (b == NULL)
@@ -262,7 +262,7 @@ vmod_get(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_HEADER hdr, VCL_
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	header_init_re(priv, s);
 	
-	hp = header_vrt_selecthttp(ctx, hdr->where);
+	hp = VRT_selecthttp(ctx, hdr->where);
 	u = header_http_findhdr(ctx, hp, hdr->what, priv->priv);
 	if (u == 0) {
 		return NULL;
@@ -280,7 +280,7 @@ vmod_copy(const struct vrt_ctx *ctx, VCL_HEADER src, VCL_HEADER dst)
 
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	
-	src_hp = header_vrt_selecthttp(ctx, src->where);
+	src_hp = VRT_selecthttp(ctx, src->where);
 	header_http_cphdr(ctx, src_hp, src->what, dst);
 }
 
@@ -292,7 +292,7 @@ vmod_remove(const struct vrt_ctx *ctx, struct vmod_priv *priv, VCL_HEADER hdr, V
 	CHECK_OBJ_NOTNULL(ctx, VRT_CTX_MAGIC);
 	header_init_re(priv, s);
 	
-	hp = header_vrt_selecthttp(ctx, hdr->where);
+	hp = VRT_selecthttp(ctx, hdr->where);
 	header_http_Unset(ctx, hp, hdr->what, priv->priv);
 }
 
