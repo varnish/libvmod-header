@@ -63,7 +63,8 @@ header_init_re(struct vmod_priv *priv, const char *s)
 }
 
 #if !defined(VRT_MINOR_VERSION) || !defined(VRT_MAJOR_VERSION) || \
-    (VRT_MAJOR_VERSION < 2 || VRT_MINOR_VERSION < 2)
+    (VRT_MAJOR_VERSION == 2 && VRT_MINOR_VERSION < 2) || \
+    (VRT_MAJOR_VERSION < 2)
 static struct http *
 VRT_selecthttp(const struct vrt_ctx *ctx, enum gethdr_e where)
 {
