@@ -3,6 +3,9 @@ ACLOCAL_AMFLAGS = -I m4
 SUBDIRS = src
 
 dist_man_MANS = vmod_header.3
+
+EXTRA_DIST = README.rst LICENSE
+
 MAINTAINERCLEANFILES = $(dist_man_MANS)
 doc_DATA = README.rst LICENSE
 
