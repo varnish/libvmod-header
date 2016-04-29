@@ -8,8 +8,8 @@ Varnish Header Module
 
 :Manual section: 3
 :Author: Kristian Lyngstøl
-:Date: 2011-08-12
-:Version: 0.3
+:Date: 2016-04-29
+:Version: 0.4+varnish3
 
 SYNOPSIS
 ========
@@ -29,6 +29,10 @@ DESCRIPTION
 
 Varnish Module (vmod) for manipulation of duplicated headers (for instance
 multiple set-cookie headers).
+
+This version works with Varnish 3.0. For contemporary releases see the
+varnish-modules collection package.
+
 
 FUNCTIONS
 =========
@@ -173,4 +177,4 @@ COPYRIGHT
 This document is licensed under the same license as the
 libvmod-header project. See LICENSE for details.
 
-* Copyright (c) 2011-2013 Varnish Software
+* Copyright (c) 2011-2016 Varnish Software
