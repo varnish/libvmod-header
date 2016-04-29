@@ -1,6 +1,6 @@
 AC_PREREQ(2.64)
-AC_COPYRIGHT([Copyright (c) 2011-2014 Varnish Software AS])
-AC_INIT([libvmod-header], [0.3])
+AC_COPYRIGHT([Copyright (c) 2011-2016 Varnish Software AS])
+AC_INIT([libvmod-header], [0.4+varnish4.0])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR(src/vmod_header.vcc)
 AC_CONFIG_HEADERS(config.h)
